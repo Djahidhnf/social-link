@@ -1,0 +1,42 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  username  String   @unique
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
+  avatarUrl String?  @map("avatar_url")
+  createdAt DateTime @default(now()) @map("creation_date")
+
+  links     Link[]
+
+  @@map("users")
+}
+
+model Link {
+  id       String   @id @default(uuid()) @db.Uuid
+  platform String
+  url      String
+
+  userId   String   @map("user_id") @db.Uuid
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("links")
+}
