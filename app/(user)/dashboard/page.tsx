@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react"
 import { useSession, signOut } from "next-auth/react"
 import Image from "next/image"
 
+
 const PLATFORMS = [
     "PHONE",
     "EMAIL",
