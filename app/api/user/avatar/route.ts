@@ -1,6 +1,7 @@
-import { auth } from "@/lib/auth"
-import { put } from "@vercel/blob"
 import { NextResponse } from "next/server"
+import { auth } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
+import { put } from "@vercel/blob"
 
 export async function POST(req: Request) {
   console.log('BLOB TOKEN:', process.env.BLOB_READ_WRITE_TOKEN ? 'exists' : 'missing')
