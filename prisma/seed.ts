@@ -1,21 +1,25 @@
-import { PrismaClient } from "@prisma/client"
-import bcrypt from "bcryptjs"
+const { PrismaClient } = require('@prisma/client')
+const bcrypt = require('bcryptjs')
 
 const prisma = new PrismaClient()
 
 async function main() {
-  const password = await bcrypt.hash("BilalAntic123!", 12)
+  const password = await bcrypt.hash('BilalAntic123!', 12)
 
   await prisma.user.upsert({
-    where: { email: "Bilal@antic-tech.com" },
+    where: { email: 'bilal@antic-tech.com' },
     update: {},
     create: {
-      username: "admin",
-      email: "Bilal@antic-tech.com",
+      username: 'admin',
+      email: 'bilal@antic-tech.com',
       password,
-      role: "ADMIN",
+      role: 'ADMIN',
     },
   })
 
-  console.log("Admin user created: Bilal@antic-tech.com / BilalAntic123!");
+  console.log('Admin created: bilal@antic-tech.com / BilalAntic123!')
 }
+
+main()
+  .catch((e) => { console.error(e); process.exit(1) })
+  .finally(() => prisma.$disconnect())

@@ -32,15 +32,19 @@ export default function LoginPage() {
       return
     }
 
+    await new Promise((resolve) => setTimeout(resolve, 500))
+
     // Check role and redirect accordingly
     const sessionRes = await fetch("/api/auth/session")
     const session = await sessionRes.json()
 
+    console.log("Session:", session)
+
     if (session?.user?.role === "ADMIN") {
-      router.push("/admin")
-    } else {
-      router.push("/dashboard")
-    }
+  window.location.href = "/admin"
+} else {
+  window.location.href = "/dashboard"
+}
   }
 
   return (
