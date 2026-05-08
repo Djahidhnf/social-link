@@ -57,7 +57,7 @@ export default async function PublicProfilePage({ params }: Props) {
         <div className="w-30 h-30 rounded-full flex items-center justify-center text-2xl font-semibold mb-4 overflow-hidden">
           {user.avatarUrl ? (
             <img 
-              src={user.avatarUrl} 
+              src={`${user.avatarUrl}?t=${Date.now()}`}
               alt={user.username} 
               className="w-full h-full object-cover" 
             />

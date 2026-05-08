@@ -197,11 +197,15 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-4">
             <div
-              className="relative w-14 h-14 rounded-full bg-white flex items-center justify-center cursor-pointer overflow-hidden group"
+              className="relative w-14 h-14 rounded-full bg-zinc-800 flex items-center justify-center cursor-pointer overflow-hidden group"
               onClick={() => fileInputRef.current?.click()}
             >
               {avatar ? (
-                <img src={avatar} alt="avatar" className="w-full h-full object-cover" />
+                <img 
+                  src={`${avatar}?t=${Date.now()}`} 
+                  alt="avatar" 
+                  className="w-full h-full object-cover" 
+                />
               ) : (
                 <span className="text-white text-xl font-semibold">
                   {session?.user?.username?.charAt(0).toUpperCase()}
