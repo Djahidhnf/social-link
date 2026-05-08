@@ -17,6 +17,7 @@ export async function POST(req: Request) {
     const blob = await put(`avatars/${session.user.id}`, file, {
       access: "public",
       addRandomSuffix: false,
+      allowOverwrite: true,
     })
     console.log('BLOB URL:', blob.url)
     
