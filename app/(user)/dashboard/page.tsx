@@ -201,9 +201,9 @@ export default function DashboardPage() {
               onClick={() => fileInputRef.current?.click()}
             >
               {avatar ? (
-                <img src={`/api/user/avatar/${session?.user?.id}`} alt="avatar" className="w-full h-full object-cover" />
+                <img src={avatar} alt="avatar" className="w-full h-full object-cover" />
               ) : (
-                <span className=" text-xl font-semibold">
+                <span className="text-white text-xl font-semibold">
                   {session?.user?.username?.charAt(0).toUpperCase()}
                 </span>
               )}

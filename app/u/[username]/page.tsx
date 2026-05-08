@@ -56,7 +56,11 @@ export default async function PublicProfilePage({ params }: Props) {
       <div className="flex flex-col items-center mb-10">
         <div className="w-30 h-30 rounded-full flex items-center justify-center text-2xl font-semibold mb-4 overflow-hidden">
           {user.avatarUrl ? (
-            <img src={`/api/user/avatar/${user.id}`} alt={user.username} className="w-full h-full object-cover" />
+            <img 
+              src={user.avatarUrl} 
+              alt={user.username} 
+              className="w-full h-full object-cover" 
+            />
           ) : (
             user.username.charAt(0).toUpperCase()
           )}
