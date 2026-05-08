@@ -105,30 +105,6 @@ export default function AdminPage() {
     setModifyUser(null)
   }
 
-  // ── NFC ──────────────────────────────────────────────────
-  // async function handleNfc(user: User) {
-  //   setNfcStatus({ userId: user.id, message: "Waiting for NFC card..." })
-
-  //   if (!("NDEFReader" in window)) {
-  //     setNfcStatus({ userId: user.id, message: "NFC works only on android" });
-  //     setTimeout(() => setNfcStatus(null), 3000)
-  //     return
-  //   }
-
-  //   try {
-  //     const profileUrl = `${window.location.origin}/profile/${encodeURIComponent(user.username)}`
-  //     const ndef = new (window as any).NDEFReader()
-  //     await ndef.write({
-  //       records: [{ recordType: "url", data: profileUrl }],
-  //     })
-  //     setNfcStatus({ userId: user.id, message: `✅ Written: ${profileUrl}` })
-  //   } catch (err) {
-  //     setNfcStatus({ userId: user.id, message: "❌ Write failed. Hold card closer." })
-  //   }
-
-  //   setTimeout(() => setNfcStatus(null), 4000)
-  // }
-
   const filtered = users.filter(
     (u) =>
       u.username.toLowerCase().includes(search.toLowerCase()) ||
@@ -210,19 +186,6 @@ export default function AdminPage() {
           </form>
         )}
 
-        {/* Stats */}
-        {/* <div className="grid grid-cols-2 gap-3 mb-8">
-          <div className="bg-white border border-zinc-800 rounded-lg px-4 py-3">
-            <p className="text-zinc-500 text-xs mb-1">Total users</p>
-            <p className="text-zinc-900 text-2xl font-semibold">{users.length}</p>
-          </div>
-          <div className="bg-white border border-zinc-800 rounded-lg px-4 py-3">
-            <p className="text-zinc-500 text-xs mb-1">Admins</p>
-            <p className="text-zinc-900 text-2xl font-semibold">{users.filter((u) => u.role === "ADMIN").length}</p>
-          </div>
-        </div> */}
-
-        {/* Search */}
         <input
           type="text"
           placeholder="Search by username or email..."
@@ -269,17 +232,6 @@ export default function AdminPage() {
                     <td className="px-4 py-3">
                       {user.id !== session?.user?.id && (
                         <div className="flex justify-end gap-4">
-                          {/* NFC status inline
-                          {nfcStatus?.userId === user.id ? (
-                            <span className="text-xs text-zinc-400">{nfcStatus.message}</span>
-                          ) : (
-                            <button
-                              onClick={() => handleNfc(user)}
-                              className="text-zinc-500 hover:text-green-400 transition-colors text-xs"
-                            >
-                              NFC
-                            </button>
-                          )} */}
                           <button
                             onClick={() => openModify(user)}
                             className="text-zinc-500 hover:text-blue-400 transition-colors text-xs"
