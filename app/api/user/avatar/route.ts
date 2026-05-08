@@ -21,6 +21,7 @@ export async function POST(req: Request) {
 
   const formData = await req.formData()
   const file = formData.get("avatar") as File
+  console.log('file:', file?.name, file?.size)
 
   if (!file) return NextResponse.json({ error: "No file uploaded." }, { status: 400 })
   if (!file.type.startsWith("image/")) return NextResponse.json({ error: "File must be an image." }, { status: 400 })
