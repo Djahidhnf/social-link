@@ -29,8 +29,9 @@ export async function POST(req: Request) {
 
   const blob = await put(`avatars/${session.user.id}`, file, {
     access: "public",
-    addRandomSuffix: false,
+    token: process.env.a71dd0c3af9fa5474c283f0a_READ_WRITE_TOKEN,
   })
+
 
   await prisma.user.update({
     where: { id: session.user.id },
