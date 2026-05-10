@@ -1,35 +1,62 @@
+// app/api/user/avatar/route.ts
+
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { put } from "@vercel/blob"
+import { v2 as cloudinary } from "cloudinary"
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+})
+
+export async function GET() {
+  const session = await auth()
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { avatarUrl: true },
+  })
+
+  return NextResponse.json({ avatarUrl: user?.avatarUrl ?? null })
+}
 
 export async function POST(req: Request) {
-  console.log('BLOB TOKEN:', process.env.BLOB_READ_WRITE_TOKEN ? 'exists' : 'missing')
-  console.log('TOKEN VALUE:', process.env.BLOB_READ_WRITE_TOKEN?.slice(0, 20))
-  
   const session = await auth()
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const formData = await req.formData()
   const file = formData.get("avatar") as File
-  console.log('FILE:', file?.name, file?.size, file?.type)
+
+  if (!file) return NextResponse.json({ error: "No file uploaded." }, { status: 400 })
+  if (!file.type.startsWith("image/")) return NextResponse.json({ error: "File must be an image." }, { status: 400 })
+  if (file.size > 2 * 1024 * 1024) return NextResponse.json({ error: "Image must be under 2MB." }, { status: 400 })
 
   try {
-    const blob = await put(`avatars/${session.user.id}`, file, {
-      access: "public",
-      addRandomSuffix: false,
-      allowOverwrite: true,
-    })
-    console.log('BLOB URL:', blob.url)
-    
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: { avatarUrl: blob.url },
+    // Convert file to base64
+    const bytes = await file.arrayBuffer()
+    const base64 = Buffer.from(bytes).toString("base64")
+    const dataUri = `data:${file.type};base64,${base64}`
+
+    // Upload to Cloudinary — overwrite existing with same public_id
+    const result = await cloudinary.uploader.upload(dataUri, {
+      folder: "procard/avatars",
+      public_id: session.user.id,
+      overwrite: true,
+      invalidate: true, // purge CDN cache
+      transformation: [{ width: 200, height: 200, crop: "fill", gravity: "face" }],
     })
 
-    return NextResponse.json({ avatarUrl: blob.url })
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { avatarUrl: result.secure_url },
+    })
+
+    return NextResponse.json({ avatarUrl: result.secure_url })
   } catch (err) {
-    console.error('BLOB ERROR:', err)
+    console.error("Cloudinary error:", err)
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
 }
