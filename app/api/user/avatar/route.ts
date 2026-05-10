@@ -5,12 +5,6 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { v2 as cloudinary } from "cloudinary"
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-})
-
 export async function GET() {
   const session = await auth()
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -27,6 +21,13 @@ export async function POST(req: Request) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
+  // Configure inside the function so env vars are loaded
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  })
+
   const formData = await req.formData()
   const file = formData.get("avatar") as File
 
@@ -35,17 +36,15 @@ export async function POST(req: Request) {
   if (file.size > 2 * 1024 * 1024) return NextResponse.json({ error: "Image must be under 2MB." }, { status: 400 })
 
   try {
-    // Convert file to base64
     const bytes = await file.arrayBuffer()
     const base64 = Buffer.from(bytes).toString("base64")
     const dataUri = `data:${file.type};base64,${base64}`
 
-    // Upload to Cloudinary — overwrite existing with same public_id
     const result = await cloudinary.uploader.upload(dataUri, {
       folder: "procard/avatars",
       public_id: session.user.id,
       overwrite: true,
-      invalidate: true, // purge CDN cache
+      invalidate: true,
       transformation: [{ width: 200, height: 200, crop: "fill", gravity: "face" }],
     })
 
