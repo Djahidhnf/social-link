@@ -13,7 +13,7 @@ export async function PATCH(
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { id } = await params
-  const { url } = await req.json()
+  const { url, label } = await req.json()
 
   if (!url) return NextResponse.json({ error: "URL is required." }, { status: 400 })
 
@@ -27,7 +27,7 @@ export async function PATCH(
 
   const updated = await prisma.link.update({
     where: { id },
-    data: { url },
+    data: { url, label: label !== undefined ? (label || null) : undefined },
   })
 
   return NextResponse.json(updated)

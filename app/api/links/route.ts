@@ -11,7 +11,7 @@ export async function GET() {
 
   const links = await prisma.link.findMany({
     where: { userId: session.user.id },
-    orderBy: { id: "asc" },
+    orderBy: [{ order: "asc" }, { id: "asc" }],
   })
 
   return NextResponse.json(links)
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const { platform, url } = await req.json()
+  const { platform, url, label } = await req.json()
 
   if (!platform || !url) {
     return NextResponse.json({ error: "Platform and URL are required." }, { status: 400 })
@@ -32,6 +32,7 @@ export async function POST(req: Request) {
     data: {
       platform,
       url,
+      label: label ?? null,
       userId: session.user.id,
     },
   })

@@ -1,7 +1,5 @@
 "use client"
 
-// app/dashboard/page.tsx
-
 import { useState, useEffect, useRef } from "react"
 import { useSession, signOut } from "next-auth/react"
 import Image from "next/image"
@@ -35,23 +33,21 @@ const PLATFORM_ICONS: Record<string, string> = {
   AUTRE: "/link.png"
 }
 
-// Platforms where user enters raw value (not a URL)
 const RAW_INPUT_PLATFORMS = ["PHONE", "EMAIL"]
 
-// Placeholder text per platform
 const PLACEHOLDERS: Record<string, string> = {
   PHONE: "e.g. 0612345678",
   EMAIL: "e.g. you@example.com",
   DEFAULT: "https://...",
 }
 
-type Link = { id: string; platform: string; url: string }
+type Link = { id: string; platform: string; url: string; label: string | null; order: number }
 
 export default function DashboardPage() {
   const { data: session } = useSession()
   const [links, setLinks] = useState<Link[]>([])
   const [platform, setPlatform] = useState("INSTAGRAM")
-  const [platformName, setPlatformName] = useState("");
+  const [platformName, setPlatformName] = useState("")
   const [url, setUrl] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
@@ -63,6 +59,7 @@ export default function DashboardPage() {
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState("")
+  const [editLabel, setEditLabel] = useState("")
   const [editLoading, setEditLoading] = useState(false)
   const [editError, setEditError] = useState("")
 
@@ -76,18 +73,21 @@ export default function DashboardPage() {
       .then((data) => setAvatar(data.avatarUrl ?? null))
   }, [])
 
-  // Format raw input into proper URL for storage
   function formatUrl(platform: string, value: string): string {
     if (platform === "PHONE") return `tel:${value.replace(/\s/g, "")}`
     if (platform === "EMAIL") return `mailto:${value.trim()}`
     return value
   }
 
-  // Display stored URL as human-readable value
   function displayValue(platform: string, url: string): string {
     if (platform === "PHONE") return url.replace("tel:", "")
     if (platform === "EMAIL") return url.replace("mailto:", "")
     return url
+  }
+
+  function displayName(link: Link): string {
+    if (link.label) return link.label
+    return link.platform.charAt(0) + link.platform.slice(1).toLowerCase()
   }
 
   async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -132,12 +132,14 @@ export default function DashboardPage() {
   function startEdit(link: Link) {
     setEditingId(link.id)
     setEditValue(displayValue(link.platform, link.url))
+    setEditLabel(link.label ?? "")
     setEditError("")
   }
 
   function cancelEdit() {
     setEditingId(null)
     setEditValue("")
+    setEditLabel("")
     setEditError("")
   }
 
@@ -150,7 +152,7 @@ export default function DashboardPage() {
     const res = await fetch(`/api/links/${link.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: formattedUrl }),
+      body: JSON.stringify({ url: formattedUrl, label: editLabel || null }),
     })
 
     const data = await res.json()
@@ -158,8 +160,23 @@ export default function DashboardPage() {
 
     if (!res.ok) { setEditError(data.error ?? "Failed to update link."); return }
 
-    setLinks((prev) => prev.map((l) => l.id === link.id ? { ...l, url: formattedUrl } : l))
+    setLinks((prev) => prev.map((l) => l.id === link.id ? { ...l, url: formattedUrl, label: editLabel || null } : l))
     setEditingId(null)
+  }
+
+  async function handleReorder(index: number, direction: "up" | "down") {
+    const swapIndex = direction === "up" ? index - 1 : index + 1
+    if (swapIndex < 0 || swapIndex >= links.length) return
+
+    const newLinks = [...links]
+    ;[newLinks[index], newLinks[swapIndex]] = [newLinks[swapIndex], newLinks[index]]
+    setLinks(newLinks)
+
+    await fetch("/api/links/reorder", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: newLinks.map((l) => l.id) }),
+    })
   }
 
   function handleExportVCard() {
@@ -201,10 +218,10 @@ export default function DashboardPage() {
               onClick={() => fileInputRef.current?.click()}
             >
               {avatar ? (
-                <img 
-                  src={`${avatar}?t=${Date.now()}`} 
-                  alt="avatar" 
-                  className="w-full h-full object-cover" 
+                <img
+                  src={`${avatar}?t=${Date.now()}`}
+                  alt="avatar"
+                  className="w-full h-full object-cover"
                 />
               ) : (
                 <span className="text-white text-xl font-semibold">
@@ -283,20 +300,36 @@ export default function DashboardPage() {
           <p className="text-zinc-600 text-sm">Aucun lien créé. Ajoutez-en un ci-dessus.</p>
         ) : (
           <ul className="flex flex-col gap-3">
-            {links.map((link) => (
+            {links.map((link, index) => (
               <li key={link.id} className="flex flex-col bg-white border border-zinc-800 rounded-lg px-4 py-3 gap-2">
                 <div className="flex items-center gap-3">
                   <Image src={PLATFORM_ICONS[link.platform] ?? "/link.png"} alt={link.platform} width={24} height={24} />
                   <div className="flex-1 min-w-0">
-                    <p className=" text-sm font-medium">
-                      {link.platform.charAt(0) + link.platform.slice(1).toLowerCase()}
-                    </p>
+                    <p className=" text-sm font-medium">{displayName(link)}</p>
                     {editingId !== link.id && (
                       <p className="text-zinc-500 text-xs truncate">{displayValue(link.platform, link.url)}</p>
                     )}
                   </div>
                   {editingId !== link.id && (
-                    <div className="flex gap-3 shrink-0">
+                    <div className="flex items-center gap-1 shrink-0">
+                      {/* Reorder buttons */}
+                      <button
+                        onClick={() => handleReorder(index, "up")}
+                        disabled={index === 0}
+                        className="text-zinc-400 hover:text-zinc-700 disabled:opacity-20 transition-colors px-1 text-base leading-none"
+                        title="Monter"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        onClick={() => handleReorder(index, "down")}
+                        disabled={index === links.length - 1}
+                        className="text-zinc-400 hover:text-zinc-700 disabled:opacity-20 transition-colors px-1 text-base leading-none"
+                        title="Descendre"
+                      >
+                        ↓
+                      </button>
+                      <span className="text-zinc-300 mx-1">|</span>
                       <button
                         onClick={() => startEdit(link)}
                         className="text-zinc-600 hover:text-blue-400 transition-colors text-sm"
@@ -305,7 +338,7 @@ export default function DashboardPage() {
                       </button>
                       <button
                         onClick={() => handleDelete(link.id)}
-                        className="text-zinc-600 hover:text-red-400 transition-colors text-sm"
+                        className="text-zinc-600 hover:text-red-400 transition-colors text-sm ml-2"
                       >
                         Supprimer
                       </button>
@@ -313,11 +346,18 @@ export default function DashboardPage() {
                   )}
                 </div>
 
-                {/* Inline edit input */}
+                {/* Inline edit */}
                 {editingId === link.id && (
                   <div className="flex flex-col gap-2">
                     <input
                       autoFocus
+                      type="text"
+                      value={editLabel}
+                      onChange={(e) => setEditLabel(e.target.value)}
+                      placeholder={link.platform.charAt(0) + link.platform.slice(1).toLowerCase()}
+                      className="bg-white border border-zinc-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-zinc-500 transition-colors placeholder:text-zinc-400"
+                    />
+                    <input
                       type={link.platform === "EMAIL" ? "email" : link.platform === "PHONE" ? "tel" : "url"}
                       value={editValue}
                       onChange={(e) => setEditValue(e.target.value)}
@@ -349,7 +389,7 @@ export default function DashboardPage() {
 
         {links.length > 0 && (
           <a
-            href={`/u/${encodeURIComponent(session?.user?.username ?? "")}`}
+            href={`/u/${session?.user?.id}`}
             target="_blank"
             className="block text-center text-zinc-500 text-sm mt-8 hover: transition-colors"
           >

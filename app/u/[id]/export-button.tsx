@@ -1,6 +1,6 @@
 "use client"
 
-type Link = { platform: string; url: string }
+type Link = { platform: string; url: string; label: string | null; order: number }
 
 export default function ExportButton({ username, email, links }: {
   username: string
