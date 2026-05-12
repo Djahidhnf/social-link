@@ -12,6 +12,7 @@ const PLATFORMS = [
     "SNAPCHAT",
     "TIKTOK",
     "WHATSAPP",
+    "YOUTUBE",
     "SITE_WEB",
     "AUTRE"
 ]
@@ -25,6 +26,7 @@ const PLATFORM_ICONS: Record<string, string> = {
   SNAPCHAT: "/snapchat.png",
   TIKTOK: "/tiktok.png",
   WHATSAPP: "/whatsapp.png",
+  YOUTUBE: "/youtube.png",
   SITE_WEB: "/website.png",
   AUTRE: "/link.png"
 }
