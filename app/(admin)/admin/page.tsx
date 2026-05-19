@@ -232,15 +232,22 @@ export default function AdminPage() {
                     <td className="px-4 py-3">
                       {user.id !== session?.user?.id && (
                         <div className="flex justify-end gap-4">
+                          <a
+                            href={`/u/${user.id}`}
+                            target="_blank"
+                            className="text-zinc-500 hover:text-zinc-900 transition-colors text-xs"
+                          >
+                            Profile
+                          </a>
                           <button
                             onClick={() => openModify(user)}
-                            className="text-zinc-500 hover:text-blue-400 transition-colors text-xs"
+                            className="text-zinc-500 hover:text-blue-400 transition-colors text-xs cursor-pointer"
                           >
                             Modify
                           </button>
                           <button
                             onClick={() => handleDelete(user.id)}
-                            className="text-zinc-500 hover:text-red-400 transition-colors text-xs"
+                            className="text-zinc-500 hover:text-red-400 transition-colors text-xs cursor-pointer"
                           >
                             Delete
                           </button>

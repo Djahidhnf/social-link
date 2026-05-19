@@ -40,9 +40,9 @@ function handleExportVCard() {
   return (
     <button
       onClick={handleExportVCard}
-      className="mt-8 text-zinc-400 text-sm hover:text-white hover:bg-blue-900 transition-colors border border-zinc-800 rounded-lg px-4 py-2"
+      className="mt-8 text-zinc-400 text-sm hover:text-white hover:bg-blue-900 transition-colors border border-zinc-800 rounded-lg px-4 py-2 cursor-pointer"
     >
-      Extraire Contact
+      Enregister Contact
     </button>
   )
 }
